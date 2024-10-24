@@ -238,23 +238,41 @@ def open_instagram(device):
     FastInputIME = "com.github.uiautomator/.FastInputIME"
     logger.info("Open Instagram app.")
 
-    def call_ig():
-        try:
-            return device.deviceV2.app_start(app_id, use_monkey=True)
-        except uiautomator2.exceptions.BaseError as exc:
-            return exc
+    
 
+    def call_ig():
+        logger.info(f"call_ig: Attempting to start {app_id}")
+        try:
+            session = device.deviceV2.session(app_id, launch_timeout=10)
+            if session:
+                logger.debug("App started using session.")
+                return False  # No error
+            else:
+                logger.error("Failed to start app session.")
+                return True  # Error
+            logger.debug("App started successfully.")
+            return False
+        except uiautomator2.exceptions.BaseError as exc:
+            logger.error(f"Error during app_start: {exc}")
+            return True
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            return True
+
+   
+        
+    logger.debug("Calling call_ig function...")
     err = call_ig()
     if err:
         logger.error(err)
         return False
     else:
-        logger.debug("Instagram called successfully.")
+        logger.info("Instagram called successfully.")
 
     max_tries = 3
     n = 0
     while device.deviceV2.app_current()["package"] != app_id:
-        if n == max_tries:
+        if n >= max_tries:
             logger.critical(
                 f"Unable to open Instagram. Bot will stop. Current package name: {device.deviceV2.app_current()['package']} (Looking for {app_id})"
             )
